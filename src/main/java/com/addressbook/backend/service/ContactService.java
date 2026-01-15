@@ -1,22 +1,29 @@
 package com.addressbook.backend.service;
 
+import com.addressbook.backend.exception.ContactNotFoundException;
 import com.addressbook.backend.model.Contact;
 import com.addressbook.backend.repository.ContactRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ContactService {
 
-    @Autowired
-    private ContactRepository contactRepository;
+    private final ContactRepository contactRepository;
+
+    public ContactService(ContactRepository contactRepository) {
+        this.contactRepository = contactRepository;
+    }
 
     // Fetch all contacts
     public List<Contact> getAllContacts() {
         return contactRepository.findAll();
+    }
+
+    public Contact getContactById(String id) {
+        return contactRepository.findById(id)
+            .orElseThrow(() -> new ContactNotFoundException(id));
     }
 
     // Add a new contact
@@ -35,16 +42,14 @@ public class ContactService {
                 contact.setPhone(contactDetails.getPhone());
                 return contactRepository.save(contact);
             })
-            .orElseThrow(() -> new RuntimeException("Contact not found with id: " + id));
+            .orElseThrow(() -> new ContactNotFoundException(id));
     }
 
     // Delete a contact
     public void deleteContact(String id) {
-        Optional<Contact> contact = contactRepository.findById(id);
-        if (contact.isPresent()) {
-            contactRepository.deleteById(id);
-        } else {
-            throw new RuntimeException("Contact not found with id: " + id);
+        if (!contactRepository.existsById(id)) {
+            throw new ContactNotFoundException(id);
         }
+        contactRepository.deleteById(id);
     }
 }

@@ -18,9 +18,11 @@ public class Contact {
     @NotBlank(message = "Last name is required")
     private String lastName;
 
+    @NotBlank(message = "Email is required")
     @Email(message = "Please provide a valid email address")
     private String email;
 
+    @Pattern(regexp = "^$|\\d{4}-\\d{2}-\\d{2}", message = "Date of birth must be in YYYY-MM-DD format")
     private String dob; // Date of Birth
 
     @Pattern(regexp = "\\d{10}", message = "Phone number must be 10 digits")
@@ -87,7 +89,6 @@ public class Contact {
         this.phone = phone;
     }
 }
-
 
 
 
