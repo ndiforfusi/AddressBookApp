@@ -1,95 +1,52 @@
 package com.addressbook.backend.controller;
 
 import com.addressbook.backend.model.Contact;
-import com.addressbook.backend.repository.ContactRepository;
+import com.addressbook.backend.service.ContactService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/contacts")
+@Validated
 public class ContactController {
 
-    private final ContactRepository contactRepository;
+    private final ContactService contactService;
 
-    // Constructor-based dependency injection (recommended)
-    public ContactController(ContactRepository contactRepository) {
-        this.contactRepository = contactRepository;
+    public ContactController(ContactService contactService) {
+        this.contactService = contactService;
     }
 
     @GetMapping
     public ResponseEntity<List<Contact>> getAllContacts() {
-        try {
-            List<Contact> contacts = contactRepository.findAll();
-            return new ResponseEntity<>(contacts, HttpStatus.OK);
-        } catch (Exception e) {
-            // Log the error if needed (using a logger)
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return ResponseEntity.ok(contactService.getAllContacts());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Contact> getContactById(@PathVariable String id) {
-        try {
-            Optional<Contact> contact = contactRepository.findById(id);
-            if (contact.isPresent()) {
-                return new ResponseEntity<>(contact.get(), HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e) {
-            // Log the error if needed (using a logger)
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return ResponseEntity.ok(contactService.getContactById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Contact> addContact(@RequestBody Contact contact) {
-        try {
-            Contact newContact = contactRepository.save(contact);
-            return new ResponseEntity<>(newContact, HttpStatus.CREATED);
-        } catch (Exception e) {
-            // Log the error if needed (using a logger)
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Contact> addContact(@Valid @RequestBody Contact contact) {
+        Contact newContact = contactService.addContact(contact);
+        return new ResponseEntity<>(newContact, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Contact> updateContact(@PathVariable String id, @RequestBody Contact contactDetails) {
-        try {
-            Optional<Contact> existingContact = contactRepository.findById(id);
-            if (existingContact.isPresent()) {
-                Contact contact = existingContact.get();
-                contact.setFirstName(contactDetails.getFirstName());
-                contact.setLastName(contactDetails.getLastName());
-                contact.setEmail(contactDetails.getEmail());
-                contact.setDob(contactDetails.getDob());
-                contact.setPhone(contactDetails.getPhone());
-
-                Contact updatedContact = contactRepository.save(contact);
-                return new ResponseEntity<>(updatedContact, HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e) {
-            // Log the error if needed (using a logger)
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Contact> updateContact(@PathVariable String id, @Valid @RequestBody Contact contactDetails) {
+        Contact updatedContact = contactService.updateContact(id, contactDetails);
+        return ResponseEntity.ok(updatedContact);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deleteContact(@PathVariable String id) {
-        try {
-            contactRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            // Log the error if needed (using a logger)
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Void> deleteContact(@PathVariable String id) {
+        contactService.deleteContact(id);
+        return ResponseEntity.noContent().build();
     }
 }
-
 
